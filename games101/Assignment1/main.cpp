@@ -19,6 +19,31 @@ Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
     return view;
 }
 
+Eigen::Matrix4f get_rotation(Eigen::Vector3f axis, float rotation_angle)
+{
+    float rad = float(rotation_angle * MY_PI) / 180.0f;
+    float cosa = cos(rad);
+    float sina = sin(rad);
+
+    axis.normalize();
+    Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
+
+    Eigen::Matrix3f nhat = Eigen::Matrix3f::Identity();
+    nhat << 
+        0, -axis.z(), axis.y(),
+        axis.z(), 0, -axis.x(),
+        -axis.y(), axis.x(), 0;
+
+    // rodrigues rotation formula
+    Eigen::Matrix3f m = cosa * I + (1 - cosa) * (axis * axis.transpose()) + sina * nhat;
+    
+    Eigen::Matrix4f rotation = Eigen::Matrix4f::Zero();
+    rotation.block<3, 3>(0, 0) = m;
+    rotation.row(3) << 0, 0, 0, 1;
+
+    return rotation;
+}
+
 Eigen::Matrix4f get_model_matrix(float rotation_angle)
 {
     Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
@@ -27,14 +52,16 @@ Eigen::Matrix4f get_model_matrix(float rotation_angle)
     // Create the model matrix for rotating the triangle around the Z axis.
     // Then return it.
 
-    float rad = float(rotation_angle * MY_PI) / 180.0f;
-    Eigen::Matrix4f rotation;
-    rotation << 
-        cos(rad), -sin(rad), 0, 0, 
-        sin(rad), cos(rad),  0, 0, 
-        0,         0,        1, 0, 
-        0,         0,        0, 1;
-    
+    // float rad = float(rotation_angle * MY_PI) / 180.0f;
+    // Eigen::Matrix4f rotation;
+    // rotation << 
+    //     cos(rad), -sin(rad), 0, 0, 
+    //     sin(rad), cos(rad),  0, 0, 
+    //     0,         0,        1, 0, 
+    //     0,         0,        0, 1;
+
+    Eigen::Vector3f axis{1, 0, 0};
+    Eigen::Matrix4f rotation = get_rotation(axis, rotation_angle);
 
     model = rotation * model;
     return model;
@@ -47,7 +74,6 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
 
     Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
 
-    // TODO: Implement this function
     // Create the projection matrix for the given parameters.
     // Then return it.
 
